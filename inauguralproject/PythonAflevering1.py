@@ -137,10 +137,10 @@ class HouseholdSpecializationModelClass:
         result = optimize.minimize(objective, intial_guess, 
                                    constraints=constraints, method = "SLSQP")
 
-        opt.LM = result.x[0]    
-        opt.HM = result.x[1]
-        opt.LF = result.x[2]
-        opt.HF = result.x[3]
+        sol.LM = opt.LM = result.x[0]    
+        sol.HM = opt.HM = result.x[1]
+        sol.LF = opt.LF = result.x[2]
+        sol.HF = opt.HF = result.x[3]
         opt.util = self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
 
         return opt

@@ -1,4 +1,4 @@
-# \Pied-Piper\
+# \[Pied-Piper\]
 
 **Group members:**
 - Asger Thimmer

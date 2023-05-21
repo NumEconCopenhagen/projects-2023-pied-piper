@@ -1,9 +1,8 @@
-# \[Group name\]
+# \[Pied-Piper\]
 
 **Group members:**
-- A
-- B
-- C
+- Asger Thimmer
+- Bjørn Yde
 
 This repository contains  
 1. Inaugural project. 

@@ -2,9 +2,9 @@
 
 **Group members:**
 - Asger Thimmer (vgq702)
-- Bjørn Yde
+- Bjørn Yde (snk441)
 
 This repository contains  
 1. Inaugural project. 
 2. Data project. We fetch data from Danmarks Statistik on disposable income divided in decils and use it as a measurement for inequality.  
-3. Model project. We model ...
+3. Model project. We model the solow model with human capital and extend the model with oil aswell.

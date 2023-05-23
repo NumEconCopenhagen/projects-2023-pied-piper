@@ -8,7 +8,5 @@ We apply the **following datasets**:
 
 1. indkomst Data.xlsx (IFOR31 DST)
 
-**Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires the following installations:
-
-``pip install matplotlib-venn``
+**Dependencies:** Apart from a standard Anaconda Python 3 installation, the project requires no further installations:
 

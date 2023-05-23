@@ -44,6 +44,8 @@ class HouseholdSpecializationModelClass:
         sol.beta0 = np.nan
         sol.beta1 = np.nan
 
+
+
     def calc_utility(self,LM,HM,LF,HF):
         """ calculate utility """
 
@@ -135,7 +137,7 @@ class HouseholdSpecializationModelClass:
         intial_guess = [12,12,12,12]
 
         result = optimize.minimize(objective, intial_guess, 
-                                   constraints=constraints, method = "SLSQP")
+                                   constraints=constraints, method = "SLSQP", tol = 1e-08)
 
         sol.LM = opt.LM = result.x[0]    
         sol.HM = opt.HM = result.x[1]
@@ -151,23 +153,21 @@ class HouseholdSpecializationModelClass:
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
-
+        
         par = self.par
         sol = self.sol
         
+        # a. loop over wF_vec
         for n, i in enumerate(par.wF_vec):
-
+            # i. set wF
             par.wF = i
-            
+            # ii. solve
             los = self.solve()
-
+            # iii. save the values
             sol.LF_vec[n] = los.LF
             sol.HF_vec[n] = los.HF
             sol.LM_vec[n] = los.LM
-            sol.HM_vec[n] = los.HM
-
-
-        self.run_regression()    
+            sol.HM_vec[n] = los.HM 
 
 
 
@@ -178,13 +178,50 @@ class HouseholdSpecializationModelClass:
 
         par = self.par
         sol = self.sol
-
+        
         x = np.log(par.wF_vec)
         y = np.log(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
-    
-    def estimate(self,alpha=None,sigma=None):
-        """ estimate alpha and sigma """
 
-        pass 
+    def estimate(self, alpha=None, sigma=None):
+        """ Estimate alpha and sigma values for our extended model
+
+        Args: all parameters in the class
+
+        Returns: optimal values for alpha & sigma
+        """
+
+        def solve_4(x):
+            """
+            Minimizing betavalues
+            
+            Args: x = alpha & sigma
+            
+            Returns: sum of squared residuals
+            """
+
+            # Setting values to alpha and sigma in the model
+            self.par.alpha = x[0]
+            self.par.sigma = x[1]
+
+            self.solve_wF_vec() # solving model
+
+            self.run_regression() 
+
+            return ((0.4-self.sol.beta0)**2 + (-0.1-self.sol.beta1)**2) 
+        
+        # Setting bounds
+        bounds = [(0.4, 0.99), (0.01, 0.99)] 
+
+        # Creating initial guess
+        initial_guess = [0.5,0.5] 
+
+        # Creating minimize function 
+        result = optimize.minimize(solve_4, initial_guess, 
+                                   bounds=bounds, method = "Nelder-Mead") 
+
+        # Printing solution
+        print(f"Optimal values: alpha = {result.x[0]:.5f}, sigma = {result.x[1]:.5f}")
+
+

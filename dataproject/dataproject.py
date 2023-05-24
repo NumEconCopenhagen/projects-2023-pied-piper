@@ -47,15 +47,17 @@ def L_Diagrams(Empty_Lists, Year, Cum_Num):
 
 
 # 2. Defining our average income diagram
-def Decile_Comp(df, decils, decil_list, income_df):
+def Decile_Comp(decils, decil_list, income_decil, PctG_GDP, plot_GDP_growth=True, plot_2pct_line=True):
     """
     This function creates a plot of the average disposable income for each decile for a given year.
     
-    The function takes four arguments:
-    df: A dataframe, which is the dataframe we want to use.
+    The function the following arguments:
     decils: A list of integers from 1 to 10, which is the deciles we want to plot.
     decil_list: A list of strings, which is the names of the deciles we want to plot.
-    income_df: A dataframe, which is the dataframe we want to use.
+    income_decil: A dataframe, which is the dataframe we want to use.
+    PctG_GDP: A dataframe, which is the dataframe we want to use.
+    plot_GDP_growth: A boolean, which is True if we want to plot the GDP growth and False if we don't.
+    plot_2pct_line: A boolean, which is True if we want to plot the 2% line and False if we don't.
     
     The function returns a plot of the average disposable income for each decile for a given year.
     """
@@ -70,7 +72,7 @@ def Decile_Comp(df, decils, decil_list, income_df):
         i = decil_list.index(d)
 
         # ii. Choosing what income to plot
-        income = income_df.iloc[i]
+        income = income_decil.iloc[i]
 
         # iii. Plotting the income
         ax.plot(income, label=decil_list[i])
@@ -82,9 +84,21 @@ def Decile_Comp(df, decils, decil_list, income_df):
 
         # v. Setting limits on each axis
         ax.set_xlim(0, 11)
-        
-    # c. Setting the legend and grid
+
+    # c. Creating a second y-axis for the GDP growth and 2% line    
+    ax2 = ax.twinx()
+
+    # d. Plotting the GDP growth
+    if plot_GDP_growth:
+        ax2.plot(PctG_GDP['Percentage Growth'], color='green', label='GDP growth, %', linestyle='-.')
+    
+    # e. Plotting the 2% line
+    if plot_2pct_line:
+        ax2.plot(PctG_GDP['2pct line'], color='red', label='2% line', linestyle='--')
+    
+    # f. Setting title, labels and grid
     ax.legend()
+    ax2.set_ylabel('Percentage Growth') 
     plt.legend(loc="upper left", bbox_to_anchor=(1.0, 1.00))
     ax.grid(True)
     

@@ -209,7 +209,7 @@ class SolowModel:
             sol.k[i+1] = par.sK_v * sol.y[i] + (1-par.delta_v) * sol.k[i]
             sol.h[i+1] = par.sH_v * sol.y[i] + (1-par.delta_v) * sol.h[i]
 
-            # iv. Calculating the growth in y and appending to list
+            # iv. Calculating the growth in y and appending to list, if it hits a 0 we set it to 0.00001
             sol.yG.append(np.log(sol.y[i+1] if sol.y[i+1] != 0 else 0.00001) - np.log(sol.y[i] if sol.y[i] != 0 else 0.00001))
 
             
@@ -267,8 +267,7 @@ class SolowModel:
             sol.k[i+1] = par.sK_v * sol.y[i] + (1-par.delta_v) * sol.k[i]
             sol.h[i+1] = par.sH_v * sol.y[i] + (1-par.delta_v) * sol.h[i]
 
-            # ii. Calculating the growth in y
-            # sol.yG.append(np.log(sol.y[i+1])-np.log(sol.y[i]))
+            # ii. Calculating the growth in y, if it hits a 0 we set it to 0.00001
             sol.yG.append(np.log(sol.y[i+1] if sol.y[i+1] != 0 else 0.00001) - np.log(sol.y[i] if sol.y[i] != 0 else 0.00001))
 
 

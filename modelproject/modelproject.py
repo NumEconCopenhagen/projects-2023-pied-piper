@@ -210,7 +210,11 @@ class SolowModel:
             sol.h[i+1] = par.sH_v * sol.y[i] + (1-par.delta_v) * sol.h[i]
 
             # iv. Calculating the growth in y and appending to list
-            sol.yG.append(np.log(sol.y[i+1])-np.log(sol.y[i]))
+            sol.yG.append(np.log(sol.y[i+1] if sol.y[i+1] != 0 else 0.00001) - np.log(sol.y[i] if sol.y[i] != 0 else 0.00001))
+
+            
+            
+            
 
         # c. Creating plot
         fig = plt.figure(figsize=(13,5))
@@ -264,7 +268,8 @@ class SolowModel:
             sol.h[i+1] = par.sH_v * sol.y[i] + (1-par.delta_v) * sol.h[i]
 
             # ii. Calculating the growth in y
-            sol.yG.append(np.log(sol.y[i+1])-np.log(sol.y[i]))
+            # sol.yG.append(np.log(sol.y[i+1])-np.log(sol.y[i]))
+            sol.yG.append(np.log(sol.y[i+1] if sol.y[i+1] != 0 else 0.00001) - np.log(sol.y[i] if sol.y[i] != 0 else 0.00001))
 
 
         # EXTENSION MODEL
@@ -289,6 +294,7 @@ class SolowModel:
 
             # ii. Calculating the growth in y
             sol.ext_yG.append(np.log(sol.ext_y[i+1])-np.log(sol.ext_y[i])) 
+            
 
         # c. Creating plot
         fig = plt.figure(figsize=(13,5))

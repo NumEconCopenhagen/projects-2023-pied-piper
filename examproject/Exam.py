@@ -4,9 +4,369 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import minimize
+from scipy import optimize
 import time
 
 from types import SimpleNamespace
+
+# Creating definitions for Problem 1 
+
+
+# Question 1-4
+
+# 1. Defining the optimal labor function
+def optimal_labor_supply(w, alpha, kappa, nu, tau):
+    """
+    Define the optimal labor supply function
+
+    Args: 
+        w(float): the real wage 
+        alpha(float): parameter 
+        kappa(float): free privat consumption component 
+        nu(float): disutility of labor scaling factor 
+        tau(float): labor income tax-rate
+    
+    Returns: 
+        the optimal labor supply function 
+    """
+    
+    #a. 
+    w_tilde = (1 - tau) * w
+    
+    #b. 
+    optimal_l = (-kappa + np.sqrt(kappa**2 + 4 * alpha / nu * w_tilde**2)) / (2 * w_tilde)
+    return optimal_l
+
+
+# 2. Defining the function for optimal labor supply
+def optimal_labor_supply_w_tilde(w_tilde, alpha, kappa, nu):
+    """ 
+    Defining the optimal labor supply function with w_tilde
+    
+    Args: 
+        w_tilde:  w_tilde = (1 - tau) * w
+        alpha(float): parameter 
+        kappa(float): free privat consumption component 
+        nu(float): disutility of labor scaling factor
+
+    Returns: 
+        expression(float): The optimal labor supply function with w_tilde  
+    """
+
+    # a. Optimal labor supply function 
+    optimal_l = (-kappa + np.sqrt(kappa**2 + 4 * alpha / nu * w_tilde**2)) / (2 * w_tilde)
+    return optimal_l
+
+
+# 3. Defining the function for government consumption
+def government_consumption(tau, w, alpha, kappa, nu):
+    """"Defining the goverment consumption function 
+
+    Args: 
+
+        tau(float): labor income tax-rate
+        w(float): the real wage 
+        alpha(float): parameter 
+        kappa(float): free privat consumption component 
+        nu(float): disutility of labor scaling factor 
+    
+    Returns: 
+
+        G(float) : the goverment consumption function 
+    """
+    # a. Generating w_tilde
+    w_tilde = (1 - tau) * w
+    
+    # b. Generating L_opt
+    L_opt = optimal_labor_supply_w_tilde(w_tilde, alpha, kappa, nu)
+    
+    # c. Generating G
+    G = tau * w * L_opt
+    return G
+
+
+# 4. Defining the function for worker utility
+def worker_utility(tau, w, alpha, kappa, G, nu):
+    """
+    Calculate the utility of a worker.
+
+    Parameters:
+        tau (float): Tax rate.
+        w (float): Wage rate.
+        alpha (float): Weight on consumption in utility.
+        kappa (float): Fixed cost of working.
+        G (float): Public good.
+        nu (float): Coefficient of relative risk aversion.
+
+    Returns:
+        utility (float): Utility of the worker.
+    """
+
+    # a. Gemerate w_tilde
+    w_tilde = (1 - tau) * w
+    
+    # b. Generate optimal labour
+    L_opt = optimal_labor_supply_w_tilde(w_tilde, alpha, kappa, nu)
+    
+    # c. Generate consumption
+    C = kappa + (1 - tau) * w * L_opt
+    
+    # d. Generate utility
+    utility = np.log(C**alpha * G**(1 - alpha)) - nu * L_opt**2 / 2
+    return utility
+
+
+
+
+
+
+
+
+# Question 5
+
+# 1 Defining the utility function  
+def objective_function_f(w, G, tau, alpha, kappa, sigma, rho, epsilon, nu):
+    """Calculating the utility function value.
+
+    Args:
+        w (float): The real wage rate.
+        G (float): Goverment consumption 
+        tau (float): Tax rate.
+        alpha (float): Weight on consumption in the objective function.
+        kappa (float): The free private consumption component.
+        sigma (float): Parameter for the utility function.
+        rho (float): Parameter for the utility function.
+        epsilon (float): Parameter for the utility function.
+        nu (float): The disutility of labor scaling factor
+
+    Returns:
+        value (float): Value of the objective function.
+    Raises:
+        ValueError: If optimization fails.
+    """
+    # a  calculating the value of the inner objective function for a given labor supply
+    def inner_objective(L):
+        # i defining the consumption function 
+        C = kappa + (1 - tau) * w * L
+        # ii returning the utility function 
+        return (((alpha * C**((sigma - 1) / sigma) + (1 - alpha) * G**((sigma - 1) / sigma))**(sigma / (sigma - 1)))**(1-rho) - 1 ) / (1 - rho) - nu * (L**(1+epsilon)) / (1+epsilon)
+    
+    # b Using a numerical solver to find the maximum of the inner objective function
+    result = optimize.minimize_scalar(lambda L: -inner_objective(L), bounds=(0, 24), method='bounded')
+    
+    # c if-else statement for debugging
+    if result.success:
+        return -result.fun  # Return the negativevalue for maximization
+    else:
+        raise ValueError("Optimization failed.")
+
+# 2 Solving for optimal labor supply L* for a given set of parameters
+def find_optimal_labor_supply(w, G, tau, alpha, kappa, sigma, rho, epsilon, nu):
+    """Find the optimal labor supply.
+
+    Args:
+        w (float): The real wage rate.
+        G (float): Goverment consumption 
+        tau (float): Tax rate.
+        alpha (float): Weight on consumption in the objective function.
+        kappa (float): The free private consumption component.
+        sigma (float): Parameter for the utility function.
+        rho (float): Parameter for the utility function.
+        epsilon (float): Parameter for the utility function.
+        nu (float): The disutility of labor scaling factor
+
+    Returns:
+        L_star (float): Optimal labor supply.
+    Raises:
+        ValueError: If optimization fails.
+    """
+    # a Optimizing the labor supply 
+    result = optimize.minimize_scalar(lambda L: -objective_function_f(w, G, tau, alpha, kappa, sigma, rho, epsilon, nu), bounds=(0, 24), method='bounded')
+    
+    # b if-else statement for debugging 
+    if result.success:
+        return result.x
+    else:
+        raise ValueError("Optimization failed.")
+
+# 3 Solving for G that satisfies G = tau * w * L*
+def find_G(w, tau, alpha, kappa, sigma, rho, epsilon, nu):
+    """Find the value of G that satisfies G = tau * w * L*.
+
+    Args:
+        w (float): The real wage rate. 
+        tau (float): Tax rate.
+        alpha (float): Weight on consumption in the objective function.
+        kappa (float): The free private consumption component.
+        sigma (float): Parameter for the utility function.
+        rho (float): Parameter for the utility function.
+        epsilon (float): Parameter for the utility function.
+        nu (float): The disutility of labor scaling factor
+
+    Returns:
+        G (float): Value of G.
+    Raises:
+        ValueError: If optimization or root finding fails.
+    """
+
+    # a. Initial guess for G
+    G = 10  
+
+    # b. defining the goverment consumption function
+    def equation(G, L):
+        return G - tau * w * L
+    
+    # c. Defining the utility function for a given labor supply
+    def objective_function_l(L, G):
+        C = kappa + (1 - tau) * w * L
+        return (((alpha * C**((sigma - 1) / sigma) + (1 - alpha) * G**((sigma - 1) / sigma))**(sigma / (sigma - 1)))**(1-rho) - 1 ) / (1 - rho) - nu * (L**(1+epsilon)) / (1+epsilon)
+        
+    # d. Using a numerical solver to find the maximum of the inner objective function
+    result = optimize.minimize_scalar(lambda L: -objective_function_l(L, G), bounds=(0, 24), method='bounded')
+    
+    # e. if-else statement for debugging and returning the results
+    if result.success:
+        L_star = result.x
+        result = optimize.root_scalar(lambda G: equation(G, L_star), method='brentq', bracket=[0, 1000])
+        if result.converged:
+            return result.root
+        else:
+            raise ValueError("Root finding failed.")
+    else:
+        raise ValueError("Optimization failed.")
+
+
+
+
+
+
+
+
+
+# Question 6
+
+# 1. Define the objective function
+def objective_function(L, w, tau, G, alpha, kappa, sigma, rho, epsilon, nu):
+    """Calculate the utility for a given labor supply.
+
+    Args:
+        L(float): labor supply
+        w (float): The real wage rate. 
+        tau (float): Tax rate.
+        G (float): Goverment consumption
+        alpha (float): Weight on consumption in the objective function.
+        kappa (float): The free private consumption component.
+        sigma (float): Parameter for the utility function.
+        rho (float): Parameter for the utility function.
+        epsilon (float): Parameter for the utility function.
+        nu (float): The disutility of labor scaling factor
+
+    Returns:
+        utility
+    """
+    
+    C = kappa + (1 - tau) * w * L
+    return (((alpha * C**((sigma - 1) / sigma) + (1 - alpha) * G**((sigma - 1) / sigma))**(sigma / (sigma - 1)))**(1 - rho) - 1) / (1 - rho) - nu * (L**(1 + epsilon)) / (1 + epsilon)
+
+
+# 2. Define the constraint function
+def constraint_function(tau, w, L_opt, G):
+    """Calculate the constraint value.
+
+    Args: 
+        tau (float): Tax rate.
+        w (float): The real wage rate.
+        L_opt(float): Optimal labor supply 
+        G(float): Goverment consumption
+
+    Returns:
+    Constraint value
+    """ 
+     
+    return G - tau * w * L_opt * ((1 - tau) * w)
+
+
+# 3. Finding the socially optimal tax rate for Set_1
+def objective_set1(tau):
+    """Calculating the utility for a given tax rate in Set 1.
+
+    Args:
+        tau (float): Tax rate.
+
+    Returns:
+        utility
+    """
+    w = 1.0
+    rho1 = 1.001
+    alpha = 0.5
+    kappa = 1.0
+    nu = 1 / (2 * 16**2)
+    epsilon = 1.0
+    sigma1 = 1.001
+
+    # a Find the optimal labor supply for the given tax rate
+    L_opt = optimize.minimize_scalar(lambda L: -objective_function(L, w, tau, tau * w * L * ((1 - tau) * w), alpha, kappa, sigma1, rho1, epsilon, nu), bounds=(0, 24), method='bounded').x
+    
+    # b Calculating the constraint value
+    constraint_val = constraint_function(tau, w, L_opt, tau * w * L_opt * ((1 - tau) * w))
+    
+    # c Calculating the worker utility
+    utility = objective_function(L_opt, w, tau, tau * w * L_opt * ((1 - tau) * w), alpha, kappa, sigma1, rho1, epsilon, nu)
+    
+    # d Penalty term for constraint violation - explanation futher down  
+    penalty = 1e8 * np.maximum(0, -constraint_val)
+    
+    # e Return the negative utility (since we want to maximize)
+    return -utility + penalty
+
+
+# 4. Finding the socially optimal tax rate for Set_2
+def objective_set2(tau):
+    """Calculating the utility for a given tax rate in Set 2.
+
+    Args:
+        tau (float): Tax rate.
+
+    Returns:
+        utility
+    """
+    w = 1.0
+    rho2 = 1.5
+    alpha = 0.5
+    kappa = 1.0
+    nu = 1 / (2 * 16**2)
+    epsilon = 1.0
+    sigma2 = 1.5
+
+    # a. Finding the optimal labor supply for the given tax rate
+    L_opt = optimize.minimize_scalar(lambda L: -objective_function(L, w, tau, tau * w * L * ((1 - tau) * w), alpha, kappa, sigma2, rho2, epsilon, nu), bounds=(0, 24), method='bounded').x
+    
+    # b. Calculate the constraint value
+    constraint_val = constraint_function(tau, w, L_opt, tau * w * L_opt * ((1 - tau) * w))
+    
+    # c. Calculate the worker utility
+    utility = objective_function(L_opt, w, tau, tau * w * L_opt * ((1 - tau) * w), alpha, kappa, sigma2, rho2, epsilon, nu)
+    
+    # d. Penalty term for constraint violation
+    penalty = 1e8 * np.maximum(0, -constraint_val)
+    
+    # e. Return the negative utility (since we want to maximize)
+    return -utility + penalty
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Creating class for problem 2
 class problem2:
@@ -275,6 +635,13 @@ class problem2:
 
         # f. Print result
         print(f'The maximum profit, H = {H:.4f}')
+
+
+
+
+
+
+
 
 
 
